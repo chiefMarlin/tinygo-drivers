@@ -4,7 +4,8 @@ import (
 	"errors"
 	"math"
 
-	"tinygo.org/x/drivers"
+	// "tinygo.org/x/drivers"
+	drivers "github.com/chiefMarlin/tinygo-drivers"
 )
 
 // Device wraps an I2C connection to a SI5351 device.

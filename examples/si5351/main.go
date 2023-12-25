@@ -4,7 +4,8 @@ import (
 	"machine"
 	"time"
 
-	"tinygo.org/x/drivers/si5351"
+	// "tinygo.org/x/drivers/si5351"
+	"github.com/chiefMarlin/tinygo-drivers/si5351"
 )
 
 // Simple demo of the SI5351 clock generator.
