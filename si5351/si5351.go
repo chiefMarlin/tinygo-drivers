@@ -113,6 +113,35 @@ func (d *Device) DisableSpreadSpectrum() error {
 	return nil
 }
 
+func (d *Device) OutputEnable(output uint8, enable bool) error {
+	if !d.initialised {
+		return ErrNotInitialised
+	}
+
+	// Read the current value of the OUTPUT_ENABLE_CONTROL register
+	data := make([]byte, 1)
+	if err := legacy.ReadRegister(d.bus, uint8(d.Address), OUTPUT_ENABLE_CONTROL, data); err != nil {
+		return err
+	}
+
+	regVal := data[0]
+
+	// Modify regVal based on clk and enable
+	if enable {
+		regVal &= ^(1 << output)
+	} else {
+		regVal |= (1 << output)
+	}
+
+	// Write the modified value back to the OUTPUT_ENABLE_CONTROL register
+	data[0] = regVal
+	if err := legacy.WriteRegister(d.bus, uint8(d.Address), OUTPUT_ENABLE_CONTROL, data); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (d *Device) EnableOutputs() error {
 	if !d.initialised {
 		return ErrNotInitialised
