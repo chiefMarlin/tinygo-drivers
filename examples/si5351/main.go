@@ -32,9 +32,14 @@ func main() {
 	clockgen := si5351.New(machine.I2C0)
 
 	// Verify device wired properly
-	if !clockgen.Connected() {
+	connected, err := clockgen.Connected()
+	if err != nil {
+		println("Unable to read device status")
+		time.Sleep(time.Second)
+	}
+	if !connected {
 		for {
-			println("Ooops, no Si5351 detected ... Check your wiring!")
+			println("Unable to detect si5351 device")
 			time.Sleep(time.Second)
 		}
 	}
