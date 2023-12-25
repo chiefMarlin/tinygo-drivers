@@ -1,4 +1,5 @@
-module tinygo.org/x/drivers
+// module tinygo.org/x/drivers
+module github.com/chiefMarlin/tinygo-drivers
 
 go 1.18
 
