@@ -6,6 +6,7 @@ import (
 
 	// "tinygo.org/x/drivers"
 	drivers "github.com/chiefMarlin/tinygo-drivers"
+	"tinygo.org/x/drivers/internal/legacy"
 )
 
 // Device wraps an I2C connection to a SI5351 device.
@@ -47,11 +48,11 @@ func (d *Device) Configure() {
 
 	// Disable all outputs setting CLKx_DIS high
 	data[0] = 0xFF
-	d.bus.WriteRegister(d.Address, OUTPUT_ENABLE_CONTROL, data)
+	legacy.WriteRegister(d.bus, uint8(d.Address), OUTPUT_ENABLE_CONTROL, data)
 
 	// Set the load capacitance for the XTAL
 	data[0] = d.crystalLoad
-	d.bus.WriteRegister(d.Address, CRYSTAL_INTERNAL_LOAD_CAPACITANCE, data)
+	legacy.WriteRegister(d.bus, uint8(d.Address), CRYSTAL_INTERNAL_LOAD_CAPACITANCE, data)
 
 	data = d.buf[:8]
 
@@ -59,7 +60,7 @@ func (d *Device) Configure() {
 	for i := range data {
 		data[i] = 0x80
 	}
-	d.bus.WriteRegister(d.Address, CLK0_CONTROL, data)
+	legacy.WriteRegister(d.bus, uint8(d.Address), CLK0_CONTROL, data)
 
 	// Disable spread spectrum output.
 	d.DisableSpreadSpectrum()
@@ -76,23 +77,23 @@ func (d *Device) Connected() bool {
 
 func (d *Device) EnableSpreadSpectrum() (err error) {
 	data := d.buf[:1]
-	err = d.bus.ReadRegister(d.Address, SPREAD_SPECTRUM_PARAMETERS, data)
+	err = legacy.ReadRegister(d.bus, uint8(d.Address), SPREAD_SPECTRUM_PARAMETERS, data)
 	if err != nil {
 		return
 	}
 	data[0] |= 0x80
-	err = d.bus.WriteRegister(d.Address, SPREAD_SPECTRUM_PARAMETERS, data)
+	err = legacy.WriteRegister(d.bus, uint8(d.Address), SPREAD_SPECTRUM_PARAMETERS, data)
 	return
 }
 
 func (d *Device) DisableSpreadSpectrum() (err error) {
 	data := d.buf[:1]
-	err = d.bus.ReadRegister(d.Address, SPREAD_SPECTRUM_PARAMETERS, data)
+	err = legacy.ReadRegister(d.bus, uint8(d.Address), SPREAD_SPECTRUM_PARAMETERS, data)
 	if err != nil {
 		return
 	}
 	data[0] &^= 0x80
-	err = d.bus.WriteRegister(d.Address, SPREAD_SPECTRUM_PARAMETERS, data)
+	err = legacy.WriteRegister(d.bus, uint8(d.Address), SPREAD_SPECTRUM_PARAMETERS, data)
 	return
 }
 
@@ -102,7 +103,7 @@ func (d *Device) EnableOutputs() (err error) {
 	}
 	data := d.buf[:1]
 	data[0] = 0x00
-	err = d.bus.WriteRegister(d.Address, OUTPUT_ENABLE_CONTROL, data)
+	err = legacy.WriteRegister(d.bus, uint8(d.Address), OUTPUT_ENABLE_CONTROL, data)
 	return
 }
 
@@ -112,7 +113,7 @@ func (d *Device) DisableOutputs() (err error) {
 	}
 	data := d.buf[:1]
 	data[0] = 0xFF
-	err = d.bus.WriteRegister(d.Address, OUTPUT_ENABLE_CONTROL, data)
+	err = legacy.WriteRegister(d.bus, uint8(d.Address), OUTPUT_ENABLE_CONTROL, data)
 	return
 }
 
@@ -211,12 +212,12 @@ func (d *Device) ConfigurePLL(pll uint8, mult uint8, num uint32, denom uint32) (
 	data[5] = uint8(((p3 & 0x000F0000) >> 12) | ((p2 & 0x000F0000) >> 16))
 	data[6] = uint8((p2 & 0x0000FF00) >> 8)
 	data[7] = uint8(p2 & 0x000000FF)
-	d.bus.WriteRegister(d.Address, baseaddr, data)
+	legacy.WriteRegister(d.bus, uint8(d.Address), baseaddr, data)
 
 	// Reset both PLLs
 	data = d.buf[:1]
 	data[0] = (1 << 7) | (1 << 5)
-	d.bus.WriteRegister(d.Address, PLL_RESET, data)
+	legacy.WriteRegister(d.bus, uint8(d.Address), PLL_RESET, data)
 
 	// Store the frequency settings for use with the Multisynth helper
 	fvco := float64(d.crystalFreq) * (float64(mult) + (float64(num) / float64(denom)))
@@ -379,7 +380,7 @@ func (d *Device) ConfigureMultisynth(output uint8, pll uint8, div uint32, num ui
 	data[5] = uint8(((p3 & 0xF0000) >> 12) | ((p2 & 0xF0000) >> 16))
 	data[6] = uint8((p2 & 0xFF00) >> 8)
 	data[7] = uint8(p2 & 0xFF)
-	err = d.bus.WriteRegister(d.Address, baseaddr, data)
+	err = legacy.WriteRegister(d.bus, uint8(d.Address), baseaddr, data)
 	if err != nil {
 		return
 	}
@@ -409,7 +410,7 @@ func (d *Device) ConfigureMultisynth(output uint8, pll uint8, div uint32, num ui
 
 	data = d.buf[:1]
 	data[0] = clkControlReg
-	err = d.bus.WriteRegister(d.Address, register, data)
+	err = legacy.WriteRegister(d.bus, uint8(d.Address), register, data)
 
 	return
 }
@@ -431,14 +432,14 @@ func (d *Device) ConfigureRdiv(output uint8, div uint8) (err error) {
 	}
 
 	data := d.buf[:1]
-	err = d.bus.ReadRegister(d.Address, register, data)
+	err = legacy.ReadRegister(d.bus, uint8(d.Address), register, data)
 	if err != nil {
 		return
 	}
 
 	d.lastRdivValue[output] = (div & 0x07) << 4
 	data[0] = (data[0] & 0x0F) | d.lastRdivValue[output]
-	err = d.bus.WriteRegister(d.Address, register, data)
+	err = legacy.WriteRegister(d.bus, uint8(d.Address), register, data)
 
 	return
 }
